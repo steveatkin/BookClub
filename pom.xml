@@ -14,11 +14,6 @@
       <name>wasdev-maven-repo</name>
       <url>http://public.dhe.ibm.com/ibmdl/export/pub/software/websphere/wasdev/maven/repository/</url>
     </repository>
-    <repository>
-      <id>in-project</id>
-      <name>In Project Repo</name>
-      <url>file:${project.basedir}/libs</url>
-    </repository>
   </repositories>
 
   <dependencies>
@@ -150,15 +145,15 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>com.ibm.g11n</groupId>
-      <artifactId>g11n-java-client</artifactId>
-      <version>1.0.0</version>
+      <groupId>com.ibm.g11n.pipeline</groupId>
+      <artifactId>gp-java-client</artifactId>
+      <version>1.1.1</version>
       <scope>compile</scope>
     </dependency>
     <dependency>
       <groupId>com.ibm.watson.developer_cloud</groupId>
-      <artifactId>java-wrapper</artifactId>
-      <version>0.1.9</version>
+      <artifactId>java-sdk</artifactId>
+      <version>3.5.1</version>
       <scope>compile</scope>
     </dependency>
   </dependencies>

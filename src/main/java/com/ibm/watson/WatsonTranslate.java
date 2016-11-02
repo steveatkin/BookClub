@@ -24,9 +24,10 @@ THE SOFTWARE.
 
 package com.ibm.watson;
 
-import com.ibm.watson.developer_cloud.language_translation.v2.LanguageTranslation;
-import com.ibm.watson.developer_cloud.language_translation.v2.model.Translation;
-import com.ibm.watson.developer_cloud.language_translation.v2.model.TranslationResult;
+import com.ibm.watson.developer_cloud.language_translator.v2.LanguageTranslator;
+import com.ibm.watson.developer_cloud.language_translator.v2.model.Language;
+import com.ibm.watson.developer_cloud.language_translator.v2.model.Translation;
+import com.ibm.watson.developer_cloud.language_translator.v2.model.TranslationResult;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -42,11 +43,11 @@ import com.ibm.json.java.JSONObject;
 public class WatsonTranslate {
 	private static final Logger logger = LoggerFactory.getLogger(WatsonTranslate.class);
 
-	private static String translationService = "language_translation";
+	private static String translationService = "language_translator";
 	private static String baseURLTranslation = "";
 	private static String usernameTranslation = "";
 	private static String passwordTranslation = "";
-	private String targetLang = "";
+	private Language targetLang = Language.ENGLISH;
 
 	static {
 		processVCAP_Services();
@@ -95,35 +96,35 @@ public class WatsonTranslate {
 	public WatsonTranslate(Locale locale) {
 		String bcp47Tag = locale.toLanguageTag();
 		String isoLang = locale.getLanguage();
-		
+
 		logger.debug("BCP 47 language tag {}", bcp47Tag);
 		logger.debug("ISO language tag {}", isoLang);
 		// see if this is a supported language for Watson translate
 
 		if(isoLang.equalsIgnoreCase("es")) {
-			targetLang = "es";
+			targetLang = Language.SPANISH;
 		}
 		else if (isoLang.equalsIgnoreCase("fr")) {
-			targetLang = "fr";
+			targetLang = Language.FRENCH;
 		}
 		else if(bcp47Tag.equalsIgnoreCase("pt-BR")) {
-			targetLang = "pt";
+			targetLang = Language.PORTUGUESE;
 		}
 	}
 
 	public String translate(String text) {
 		String translatedText = text;
-		
+
 		if(text != null && !text.equals("") && !targetLang.equals("")) {
-			LanguageTranslation service = new LanguageTranslation();
+			LanguageTranslator service = new LanguageTranslator();
 			service.setUsernameAndPassword(usernameTranslation, passwordTranslation);
-			TranslationResult translationResult = service.translate(text, "en", targetLang);
-		
+			TranslationResult translationResult = service.translate(text, Language.ENGLISH, targetLang).execute();
+
 			Iterator<Translation> itr = translationResult.getTranslations().iterator();
 			while(itr.hasNext()) {
 				translatedText = itr.next().getTranslation();
 			}
-			
+
 		}
 
 		return translatedText;
