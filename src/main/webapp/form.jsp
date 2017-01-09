@@ -207,21 +207,6 @@ ResourceBundle res = ResourceBundle.getBundle("com.ibm.translation", request.get
                       </div>
                     </div>
 
-
-                    <div class="row-fluid">
-                      <div class="col-md-12 column-white">
-                        <span class="label label-primary"><%=res.getString("sentiment")%></span>
-                          <p>
-                           <span class="badge badge-positive" id="badgePositive<%=i%>">0</span>
-                          <br>
-                          <span class="badge badge-neutral" id="badgeNeutral<%=i%>">0</span>
-                          <br>
-                          <span class="badge badge-negative" id="badgeNegative<%=i%>">0</span>
-                        </p>
-                      </div>
-                    </div>
-
-
                     <div class="row-fluid">
                       <div class="col-md-12 column-white">
                         <span class="label label-primary"><%=res.getString("twitter")%></span>
@@ -233,6 +218,9 @@ ResourceBundle res = ResourceBundle.getBundle("com.ibm.translation", request.get
                               </th>
                               <th data-field="tweet" data-formatter="twitterFormatter">
                                 <%=res.getString("message_table")%>
+                              </th>
+                              <th data-field="sentiment" data-formatter="polarityFormatter">
+                                <%=res.getString("sentiment_label")%>
                               </th>
                             </tr>
                           </thead>
@@ -283,10 +271,13 @@ ResourceBundle res = ResourceBundle.getBundle("com.ibm.translation", request.get
   function polarityFormatter(value) {
   	var span = "";
 
-    if (value === 'Positive') {
+    if (value.toLowerCase() === 'positive') {
     	span = "<span class='badge badge-positive'>+</span>";
-    } else if (value === "Negative") {
+    } else if (value.toLowerCase() === 'negative') {
         span = "<span class='badge badge-negative'>-</span>";
+    }
+    else {
+        span = "<span class='badge badge-neutral'>?</span>";
     }
     return span;
   }
@@ -367,37 +358,6 @@ ResourceBundle res = ResourceBundle.getBundle("com.ibm.translation", request.get
     return false;
   }
 
-
-  function setupSentimentEventSource(IdNum) {
-    if (typeof(EventSource) !== 'undefined') {
-      var jsonData = $('#accordion' + IdNum).data('book');
-      var book = JSON.parse(jsonData);
-
-      var source = new EventSource('Sentiment?title=' + book.title + '&author=' + book.author);
-
-      source.onmessage = function(event) {
-        var sentiment = JSON.parse(event.data);
-        if (sentiment.sentiment == "positive") {
-          $('#badgePositive' + IdNum).text(sentiment.count);
-        } else if (sentiment.sentiment === "negative") {
-          $('#badgeNegative' + IdNum).text(sentiment.count);
-        } else if (sentiment.sentiment === "neutral") {
-          $('#badgeNeutral' + IdNum).text(sentiment.count);
-        }
-      };
-
-      source.onerror = function(event) {
-      	// alert('<%=StringEscapeUtils.escapeJavaScript(res.getString("closed"))%>');
-      };
-
-      source.addEventListener('finished', function(event) {
-        source.close();
-      }, false);
-    } else {
-      // alert('<%=StringEscapeUtils.escapeJavaScript(res.getString("sse_error"))%>');
-    }
-    return false;
-  }
 
   function setupReviewEventSource(IdNum) {
     if (typeof(EventSource) !== 'undefined') {
@@ -493,7 +453,6 @@ ResourceBundle res = ResourceBundle.getBundle("com.ibm.translation", request.get
       }
 
       setupTwitterEventSource(IdNum);
-      setupSentimentEventSource(IdNum);
       setupReviewEventSource(IdNum);
     });
 

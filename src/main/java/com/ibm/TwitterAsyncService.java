@@ -27,6 +27,7 @@ package com.ibm;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 import org.slf4j.Logger;
@@ -35,9 +36,10 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.AsyncContext;
 
 import com.ibm.json.java.JSONObject;
-import com.ibm.twitter.TweetMessage;
-import com.ibm.twitter.TwitterInsights;
 import com.ibm.watson.WatsonTranslate;
+
+import twitter4j.*;
+import com.ibm.alchemy.*;
 
 public class TwitterAsyncService implements Runnable {
 	private static final Logger logger = LoggerFactory.getLogger(TwitterAsyncService.class);
@@ -61,32 +63,48 @@ public class TwitterAsyncService implements Runnable {
 
 		logger.debug("Requested book title {} and author {}", bookTitle, bookAuthor);
 
-		TwitterInsights twitter = new TwitterInsights();
-		ArrayList<TweetMessage> tweetMessages = twitter.getTweetList(bookTitle, bookAuthor).getTweetList();
+		Query query = new Query(bookTitle + " " + bookAuthor);
+	    query.setResultType(Query.RECENT);
+	    	
+	    Twitter twitter = TwitterFactory.getSingleton();
 
-		logger.debug("Current tweets {}", tweetMessages.toString());
 
 		try {
 			PrintWriter writer = ac.getResponse().getWriter();
 			Locale locale = ac.getRequest().getLocale();
 			WatsonTranslate watson = new WatsonTranslate(locale);
 
-			for(TweetMessage tweetMessage : tweetMessages) {
+			// Just get the first page of results to avoid exceeding the Twitter rate limit
+	    	QueryResult result = twitter.search(query);
+
+			Alchemy alchemy = new Alchemy();
+	        	
+	    	List<Status> tweets = result.getTweets();
+	        	
+	    	logger.debug("Current tweets {}", tweets.toString());
+
+			for(Status tweetMessage : tweets) {
 				JSONObject json = new JSONObject();
 				JSONObject tweet = new JSONObject();
 				// We need to put the tweet and link into an inner object
 				// so that we can use a special formatter in bootstrap table
 
-				json.put("screenName", tweetMessage.getMessage().getActor().getUserName());
+				json.put("screenName", tweetMessage.getUser().getScreenName());
 
 				if(translate) {
-					tweet.put("message", translate(watson, tweetMessage.getMessage().getBody()));
+					String message = watson.translate(tweetMessage.getText());
+	    			tweet.put("message", message);
+					json.put("sentiment", alchemy.getSentiment(message));
 				}
 				else {
-					tweet.put("message", tweetMessage.getMessage().getBody());
+					tweet.put("message", tweetMessage.getText());
+					json.put("sentiment", alchemy.getSentiment(tweetMessage.getText()));
 				}
 
-				tweet.put("link", tweetMessage.getMessage().getLink());
+				String url= "https://twitter.com/" + tweetMessage.getUser().getScreenName() 
+    			+ "/status/" + tweetMessage.getId();
+
+				tweet.put("link", url);
 
 				json.put("tweet", tweet);
 
@@ -99,6 +117,9 @@ public class TwitterAsyncService implements Runnable {
 			writer.flush();
 			writer.close();
 		}
+		catch(TwitterException e) {
+	    		logger.error("Twitter Error {}",e.getMessage());
+	    }
 		catch(IOException e) {
 			logger.error("could not write SSE {}", e.getMessage());
 		}
