@@ -156,7 +156,7 @@ ResourceBundle res = ResourceBundle.getBundle("com.ibm.translation", request.get
              <div class="panel-body">
                <div class="panel-group" id="accordionPanel">
                  <div class="accordion" id="accordion" style="display: none;">
-                   <% for(int i=0 ; i < 20; ++i) { %>
+                   <% for(int i=0 ; i < 15; ++i) { %>
                        <div class="panel panel-default">
                          <div class="panel-heading">
                            <h4 class="panel-title">
